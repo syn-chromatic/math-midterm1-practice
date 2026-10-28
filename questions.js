@@ -736,6 +736,7 @@ HL.start({
   eyebrow:"Math exam practice · 8 tasks",
   random:true,
   newAll:true,
+  themeToggle:true,
   gsym:false,
   rungs:[
     ["Write down what you know","Name the numbers you'll use"],

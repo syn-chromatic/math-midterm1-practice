@@ -420,3 +420,9 @@ input,button,select,textarea{box-sizing:border-box}
   .rung-btn .rung-n{animation:nudge-heat 2.2s ease-in-out infinite}
   @keyframes nudge-heat{0%,65%,100%{box-shadow:0 0 0 0 var(--heat-glow)}30%{box-shadow:0 0 0 8px var(--heat-glow)}}
 }
+
+/* Light / dark switch, top right of the header */
+.top-row{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;flex-wrap:wrap}
+.theme-btn{display:inline-flex;align-items:center;gap:7px;font-size:.86rem;padding:.42em .85em;border-radius:999px;border-color:var(--rule);color:var(--ink);background:var(--card)}
+.theme-btn:hover{border-color:var(--blue);background:var(--card)}
+.theme-btn svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}

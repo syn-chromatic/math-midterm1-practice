@@ -217,17 +217,23 @@ function sheetHTML(){
   if(!items.length) return `<div class="sheet" id="sheet"><p class="small">Formulas appear here once you open hint 3 on a question, or solve it.</p></div>`;
   return `<div class="sheet" id="sheet">${items.map(e=>`<div class="sheet-item"><span class="label">${e.topic} · ${e.name}</span>${EQ(e.eq)}<p class="small">${e.note||""}</p></div>`).join("")}</div>`;
 }
+/* Light / dark switch. With no choice saved, the page follows the device setting. */
+const THEME_KEY="hl-theme";
+const isDark=()=>{const t=document.documentElement.getAttribute("data-theme");return t?t==="dark":!!(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches);};
+const SUN='<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>';
+const MOON='<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>';
+function themeBtnHTML(){const d=isDark();return `<button class="btn theme-btn" data-act="theme" aria-label="Switch to ${d?"light":"dark"} mode">${d?SUN:MOON}<span>${d?"Light mode":"Dark mode"}</span></button>`;}
 function headHTML(){
   return `<header class="top">
-    <p class="eyebrow">${CFG.eyebrow||`Physics exam practice${CFG.setName?` · ${CFG.setName}`:""} · ${QS.length} questions`}</p>
+    <div class="top-row"><p class="eyebrow">${CFG.eyebrow||`Physics exam practice${CFG.setName?` · ${CFG.setName}`:""} · ${QS.length} questions`}</p>${CFG.themeToggle?themeBtnHTML():""}</div>
     <h1>${CFG.title||"Physics Midterm 1 Practice"}${CFG.setName?` <span class="h1-set">${CFG.setName}</span>`:""}</h1>
   </header>`;
 }
-/* "New numbers for all": asks first only if it would clear unfinished work */
+/* "New numbers" in the side panel: always asks first, and the question explains that it changes all the tasks */
 const unfinished=()=>QS.some(q=>{const s=state.qs[q.id];if(allSolved(q))return false;return s.hints>0||Object.values(s.inputs||{}).some(v=>String(v).trim())||Object.values(s.gv||{}).some(v=>String(v).trim());});
 function newAllHTML(){
-  if(!state.allArm)return `<button class="btn btn-heat" data-act="newall">New numbers for all ${QS.length}</button>`;
-  return `<div class="arm-row" role="alert"><span class="small">This clears the answers and hints you haven't finished.</span><button class="btn btn-primary btn-heat" data-act="newall">Yes, new numbers</button><button class="btn btn-ghost" data-act="newallno">Cancel</button></div>`;
+  if(!state.allArm)return `<button class="btn btn-heat" data-act="newall" title="New numbers for all ${QS.length} tasks">New numbers</button>`;
+  return `<div class="arm-row" role="alert"><span class="small">This gives all ${QS.length} tasks new numbers.${unfinished()?" Answers and hints you haven't finished will be cleared.":""}</span><button class="btn btn-primary btn-heat" data-act="newall">Ok</button><button class="btn btn-ghost" data-act="newallno">Cancel</button></div>`;
 }
 function renewAll(){if(CFG.onRenewAll)CFG.onRenewAll(true);QS.forEach(renew);if(CFG.onRenewAll)CFG.onRenewAll(false);}
 function sideHTML(){
@@ -487,9 +493,10 @@ function onClick(e){
   const act=b.dataset.act,q=curQ(),s=q?state.qs[q.id]:null;
   if(state.allArm&&act!=="newall"&&act!=="newallno")state.allArm=false;
   switch(act){
-    case "newall":if(!state.allArm&&unfinished()){state.allArm=true;render();break;}
+    case "newall":if(!state.allArm){state.allArm=true;render();break;}
       state.allArm=false;renewAll();if(state.cur>=QS.length)state.cur=0;render();scrollToEl($("#main"),"start");break;
     case "newallno":state.allArm=false;render();break;
+    case "theme":{const next=isDark()?"light":"dark";document.documentElement.setAttribute("data-theme",next);try{localStorage.setItem(THEME_KEY,next);}catch(e){}render();break;}
     case "go":state.cur=+b.dataset.i;render();scrollToEl($("#main"),"start");break;
     case "next":state.cur=Math.min(QS.length,state.cur+1);render();scrollToEl($("#main"),"start");break;
     case "prev":state.cur=Math.max(0,state.cur-1);render();scrollToEl($("#main"),"start");break;
@@ -578,6 +585,8 @@ function start(cfg){
     else state.qs[sl.id]=freshQ(sl);});
   resolve();
   if(!(state.cur>=0&&state.cur<=QS.length))state.cur=0;
+  if(CFG.themeToggle){try{const t=localStorage.getItem(THEME_KEY);if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}
+    if(window.matchMedia){const mq=window.matchMedia("(prefers-color-scheme: dark)"),f=()=>{if(!document.documentElement.getAttribute("data-theme"))render();};if(mq.addEventListener)mq.addEventListener("change",f);}}
   bind();render();
 }
 
