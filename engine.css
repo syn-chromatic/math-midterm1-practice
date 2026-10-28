@@ -401,3 +401,22 @@ input,button,select,textarea{box-sizing:border-box}
 .alg{display:flex;flex-direction:column;gap:6px;font-family:var(--font-math);font-size:1.2rem}
 .wk-i{white-space:normal}
 @media (max-width:520px){.wk,.stp-stage{font-size:1.05rem}.dmath{font-size:1em;line-height:1.5}.opts{width:100%;font-size:.92rem}.opts td,.opts th{padding:5px 3px;min-width:0}}
+
+/* "New numbers for all" confirm row in the side panel */
+.arm-row{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;background:var(--warn-bg);border-radius:6px;padding:10px 12px;width:100%}
+.arm-row .small{flex:1 1 100%;color:var(--ink)}
+
+/* Orange accents: the "New numbers for all" button, and the number of the hint you can open next (it breathes in orange) */
+:root{--heat-ui:#b24d1a;--heat-ui-ink:#ffffff;--heat-glow:rgba(212,96,42,.4)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--heat-ui:#ff9b62;--heat-ui-ink:#1a0f08;--heat-glow:rgba(255,155,98,.38)}}
+:root[data-theme="dark"]{--heat-ui:#ff9b62;--heat-ui-ink:#1a0f08;--heat-glow:rgba(255,155,98,.38)}
+.btn-heat{border-color:var(--heat-ui);color:var(--heat-ui)}
+.btn-heat:hover{background:var(--heat-soft)}
+.btn-heat.btn-primary{background:var(--heat-ui);color:var(--heat-ui-ink)}
+.btn-heat.btn-primary:hover{background:var(--heat-ui);filter:brightness(1.08)}
+.btn-heat:focus-visible{outline-color:var(--heat-ui)}
+.rung-btn .rung-n{border-color:var(--heat-ui);color:var(--heat-ui)}
+@media (prefers-reduced-motion:no-preference){
+  .rung-btn .rung-n{animation:nudge-heat 2.2s ease-in-out infinite}
+  @keyframes nudge-heat{0%,65%,100%{box-shadow:0 0 0 0 var(--heat-glow)}30%{box-shadow:0 0 0 8px var(--heat-glow)}}
+}

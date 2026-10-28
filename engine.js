@@ -223,9 +223,16 @@ function headHTML(){
     <h1>${CFG.title||"Physics Midterm 1 Practice"}${CFG.setName?` <span class="h1-set">${CFG.setName}</span>`:""}</h1>
   </header>`;
 }
+/* "New numbers for all": asks first only if it would clear unfinished work */
+const unfinished=()=>QS.some(q=>{const s=state.qs[q.id];if(allSolved(q))return false;return s.hints>0||Object.values(s.inputs||{}).some(v=>String(v).trim())||Object.values(s.gv||{}).some(v=>String(v).trim());});
+function newAllHTML(){
+  if(!state.allArm)return `<button class="btn btn-heat" data-act="newall">New numbers for all ${QS.length}</button>`;
+  return `<div class="arm-row" role="alert"><span class="small">This clears the answers and hints you haven't finished.</span><button class="btn btn-primary btn-heat" data-act="newall">Yes, new numbers</button><button class="btn btn-ghost" data-act="newallno">Cancel</button></div>`;
+}
+function renewAll(){if(CFG.onRenewAll)CFG.onRenewAll(true);QS.forEach(renew);if(CFG.onRenewAll)CFG.onRenewAll(false);}
 function sideHTML(){
   return `<nav class="${CFG.sets?"setnav":"chips"}" aria-label="Questions">${navHTML()}</nav>
-    <div class="sheet-bar">${CFG.random?`<button class="btn" data-act="random">Random question</button>`:""}<button class="btn btn-ghost" data-act="sheet" aria-expanded="${state.sheetOpen}" aria-controls="sheet">${state.sheetOpen?"Hide":"Show"} my formula sheet<span class="count">${sheetEntries().length}</span></button></div>
+    <div class="sheet-bar">${CFG.random?`<button class="btn" data-act="random">Random question</button>`:""}${CFG.newAll?newAllHTML():""}<button class="btn btn-ghost" data-act="sheet" aria-expanded="${state.sheetOpen}" aria-controls="sheet">${state.sheetOpen?"Hide":"Show"} my formula sheet<span class="count">${sheetEntries().length}</span></button></div>
     ${state.sheetOpen?sheetHTML():""}
 `;
 }
@@ -478,7 +485,11 @@ function renew(q){
 function onClick(e){
   const b=e.target.closest("[data-act]");if(!b)return;
   const act=b.dataset.act,q=curQ(),s=q?state.qs[q.id]:null;
+  if(state.allArm&&act!=="newall"&&act!=="newallno")state.allArm=false;
   switch(act){
+    case "newall":if(!state.allArm&&unfinished()){state.allArm=true;render();break;}
+      state.allArm=false;renewAll();if(state.cur>=QS.length)state.cur=0;render();scrollToEl($("#main"),"start");break;
+    case "newallno":state.allArm=false;render();break;
     case "go":state.cur=+b.dataset.i;render();scrollToEl($("#main"),"start");break;
     case "next":state.cur=Math.min(QS.length,state.cur+1);render();scrollToEl($("#main"),"start");break;
     case "prev":state.cur=Math.max(0,state.cur-1);render();scrollToEl($("#main"),"start");break;
@@ -496,7 +507,7 @@ function onClick(e){
     case "greveal":s.grevealed=true;render();break;
     case "check":checkPart(q,b.dataset.part);break;
     case "renew":renew(q);render();scrollToEl($("#main"),"start");break;
-    case "renewall":if(CFG.onRenewAll)CFG.onRenewAll(true);QS.forEach(renew);if(CFG.onRenewAll)CFG.onRenewAll(false);state.cur=0;render();scrollToEl($("#main"),"start");break;
+    case "renewall":state.allArm=false;renewAll();state.cur=0;render();scrollToEl($("#main"),"start");break;
   }
 }
 function onInput(e){
