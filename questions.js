@@ -737,6 +737,7 @@ HL.start({
   random:true,
   newAll:true,
   themeToggle:true,
+  noun:"tasks",
   gsym:false,
   rungs:[
     ["Write down what you know","Name the numbers you'll use"],

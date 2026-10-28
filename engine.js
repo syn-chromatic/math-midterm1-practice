@@ -198,10 +198,10 @@ function sheetEntries(){
   QS.forEach(q=>{const s=state.qs[q.id];if(s.hints>=3||allSolved(q)||s.wins>0)q.sheet.forEach(e=>out.push(Object.assign({topic:q.topic},e)));});
   return out;
 }
+const statusOf=q=>{const s=state.qs[q.id];return allSolved(q)?"Solved":s.hints?`${s.hints} hint${s.hints>1?"s":""} open`:"Not started";};
 function navHTML(){
   const chips=QS.map((q,i)=>{
-    const s=state.qs[q.id],done=allSolved(q);
-    const status=done?"Solved":s.hints?`${s.hints} hint${s.hints>1?"s":""} open`:"Not started";
+    const done=allSolved(q),status=statusOf(q);
     return `<button class="chip${i===state.cur?" is-cur":""}${done?" is-done":""}" data-act="go" data-i="${i}"${i===state.cur?' aria-current="step"':""}><span class="chip-n">${done?"✓":i+1}</span><span class="chip-t"><span class="chip-topic">${q.topic}</span><span class="chip-s">${status}</span></span></button>`;
   }).join("");
   const n=QS.filter(allSolved).length;
@@ -229,15 +229,26 @@ function headHTML(){
     <h1>${CFG.title||"Physics Midterm 1 Practice"}${CFG.setName?` <span class="h1-set">${CFG.setName}</span>`:""}</h1>
   </header>`;
 }
-/* "New numbers" in the side panel: always asks first, and the question explains that it changes all the tasks */
+/* "New numbers" in the side panel: always asks first, and explains that it changes every question */
 const unfinished=()=>QS.some(q=>{const s=state.qs[q.id];if(allSolved(q))return false;return s.hints>0||Object.values(s.inputs||{}).some(v=>String(v).trim())||Object.values(s.gv||{}).some(v=>String(v).trim());});
 function newAllHTML(){
-  if(!state.allArm)return `<button class="btn btn-heat" data-act="newall" title="New numbers for all ${QS.length} tasks">New numbers</button>`;
-  return `<div class="arm-row" role="alert"><span class="small">This gives all ${QS.length} tasks new numbers.${unfinished()?" Answers and hints you haven't finished will be cleared.":""}</span><button class="btn btn-primary btn-heat" data-act="newall">Ok</button><button class="btn btn-ghost" data-act="newallno">Cancel</button></div>`;
+  if(!state.allArm)return `<button class="btn btn-heat" data-act="newall" title="New numbers for all ${QS.length} ${CFG.noun||"questions"}">New numbers</button>`;
+  return `<div class="arm-row" role="alert"><span class="small">This gives all ${QS.length} ${CFG.noun||"questions"} new numbers.${unfinished()?" Answers and hints you haven't finished will be cleared.":""}</span><button class="btn btn-primary btn-heat" data-act="newall">Ok</button><button class="btn btn-ghost" data-act="newallno">Cancel</button></div>`;
 }
 function renewAll(){if(CFG.onRenewAll)CFG.onRenewAll(true);QS.forEach(renew);if(CFG.onRenewAll)CFG.onRenewAll(false);}
+/* Question list. In the wide two-column layout it's a plain list on the right. When it sits above the question
+   (portrait or narrow screens) it becomes a dropdown: a button showing the current question, opening the full list. */
+let pickOpen=false;
+const CHEV='<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 9.5l6 6 6-6"/></svg>';
+function pickBtnHTML(){
+  const i=state.cur,res=i>=QS.length,q=res?null:QS[i],done=!!q&&allSolved(q);
+  const n=res?"Σ":done?"✓":i+1,t=res?"Results":q.topic,st=res?`${QS.filter(allSolved).length} of ${QS.length} solved`:statusOf(q);
+  return `<button class="qpick-btn${done?" is-done":""}" data-act="pick" aria-expanded="${pickOpen}" aria-controls="qlist" aria-label="Choose a question: ${res?"Results":`question ${i+1}, ${t}`}"><span class="chip-n">${n}</span><span class="chip-t"><span class="chip-topic">${t}</span><span class="chip-s">${st}</span></span><span class="qpick-chev">${CHEV}</span></button>`;
+}
+function setPick(open){pickOpen=open;const el=$(".qpick");if(!el)return;el.classList.toggle("open",open);const bt=$(".qpick-btn",el);if(bt)bt.setAttribute("aria-expanded",String(open));
+  if(open){const list=$("#qlist"),cur=$("#qlist .is-cur");if(list&&cur)list.scrollTop=Math.max(0,cur.offsetTop-list.clientHeight/2+cur.offsetHeight/2);}}
 function sideHTML(){
-  return `<nav class="${CFG.sets?"setnav":"chips"}" aria-label="Questions">${navHTML()}</nav>
+  return `<div class="qpick${pickOpen?" open":""}">${pickBtnHTML()}<nav class="${CFG.sets?"setnav":"chips"} qlist" id="qlist" aria-label="Questions">${navHTML()}</nav></div>
     <div class="sheet-bar">${CFG.random?`<button class="btn" data-act="random">Random question</button>`:""}${CFG.newAll?newAllHTML():""}<button class="btn btn-ghost" data-act="sheet" aria-expanded="${state.sheetOpen}" aria-controls="sheet">${state.sheetOpen?"Hide":"Show"} my formula sheet<span class="count">${sheetEntries().length}</span></button></div>
     ${state.sheetOpen?sheetHTML():""}
 `;
@@ -489,8 +500,11 @@ function renew(q){
   const f=freshQ(def,np);f.best=s.best;f.wins=s.wins;if(w!==undefined)f.which=w;state.qs[q.id]=f;resolve();
 }
 function onClick(e){
+  if(pickOpen&&!e.target.closest(".qpick"))setPick(false);
   const b=e.target.closest("[data-act]");if(!b)return;
   const act=b.dataset.act,q=curQ(),s=q?state.qs[q.id]:null;
+  if(act==="pick"){setPick(!pickOpen);return;}
+  pickOpen=false;
   if(state.allArm&&act!=="newall"&&act!=="newallno")state.allArm=false;
   switch(act){
     case "newall":if(!state.allArm){state.allArm=true;render();break;}
@@ -523,6 +537,7 @@ function onInput(e){
   else if(t.classList.contains("gv-in")){s.gv[t.dataset.g]=t.value;if(s.gcheck[t.dataset.g]!==undefined){delete s.gcheck[t.dataset.g];const row=t.closest(".gv-row");if(row){row.classList.remove("ok","bad");const m=$(".gv-mark",row);if(m)m.textContent="";const h=$(".gv-hint",row);if(h)h.remove();}}save();}
 }
 function onKey(e){
+  if(e.key==="Escape"&&pickOpen){setPick(false);const bt=$(".qpick-btn");if(bt)bt.focus();return;}
   if(e.key!=="Enter")return;const t=e.target,q=curQ();if(!q||!t.classList)return;
   if(t.classList.contains("ans")&&!t.readOnly){e.preventDefault();checkPart(q,t.dataset.part);}
   else if(t.classList.contains("gv-in")){e.preventDefault();const b=$('[data-act="gcheck"]');if(b)b.click();}

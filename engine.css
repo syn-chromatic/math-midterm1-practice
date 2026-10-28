@@ -422,7 +422,29 @@ input,button,select,textarea{box-sizing:border-box}
 }
 
 /* Light / dark switch, top right of the header */
-.top-row{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;flex-wrap:wrap}
-.theme-btn{display:inline-flex;align-items:center;gap:7px;font-size:.86rem;padding:.42em .85em;border-radius:999px;border-color:var(--rule);color:var(--ink);background:var(--card)}
+.top-row{display:flex;justify-content:space-between;align-items:center;gap:10px 16px}
+.top-row .eyebrow{flex:1 1 auto;min-width:0}
+.theme-btn{flex:none;display:inline-flex;align-items:center;gap:7px;font-size:.86rem;padding:.42em .85em;border-radius:999px;border-color:var(--rule);color:var(--ink);background:var(--card)}
 .theme-btn:hover{border-color:var(--blue);background:var(--card)}
 .theme-btn svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* Question list as a dropdown when it sits above the question; a plain list in the wide two-column layout */
+.qpick{position:relative}
+.qpick-btn{display:flex;align-items:center;gap:10px;width:100%;padding:8px;background:var(--card);border:1.5px solid var(--blue);border-radius:8px;color:var(--ink);font:inherit;text-align:left;cursor:pointer;box-shadow:0 2px 0 var(--rule)}
+.qpick-btn:hover{background:var(--blue-soft)}
+.qpick-btn .chip-n{border-color:var(--blue);color:var(--blue)}
+.qpick-btn.is-done .chip-n{background:var(--ok);border-color:var(--ok);color:var(--card)}
+.qpick-chev{margin-left:auto;flex:none;width:32px;height:32px;border-radius:50%;background:var(--blue);color:var(--blue-ink);display:grid;place-items:center;transition:transform .2s ease}
+.qpick-chev svg{fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.qpick.open .qpick-chev{transform:rotate(180deg)}
+.qpick .qlist{display:none}
+.qpick.open .qlist{display:flex;flex-direction:column;flex-wrap:nowrap;gap:6px;position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;margin:0;padding:8px;background:var(--card);border:1px solid var(--rule);border-radius:8px;box-shadow:0 14px 34px rgba(8,16,40,.28);max-height:min(70vh,560px);overflow-y:auto;overscroll-behavior:contain}
+.qpick.open .qlist .chip{width:100%}
+@media (prefers-reduced-motion:no-preference){
+  .qpick.open .qlist{animation:qdrop .16s ease-out}
+  @keyframes qdrop{from{opacity:0;transform:translateY(-4px)}}
+}
+@media (min-width:900px) and (orientation:landscape){
+  .qpick-btn{display:none}
+  .qpick .qlist,.qpick.open .qlist{display:flex;position:static;padding:0;border:0;background:none;box-shadow:none;max-height:none;overflow:visible;animation:none}
+}
