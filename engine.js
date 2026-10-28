@@ -214,8 +214,8 @@ function navHTML(){
 }
 function sheetHTML(){
   const items=sheetEntries();
-  if(!items.length) return `<div class="sheet" id="sheet"><p class="small">Formulas appear here once you open hint 3 on a question, or solve it.</p></div>`;
-  return `<div class="sheet" id="sheet">${items.map(e=>`<div class="sheet-item"><span class="label">${e.topic} · ${e.name}</span>${EQ(e.eq)}<p class="small">${e.note||""}</p></div>`).join("")}</div>`;
+  const note=`<p class="sheet-note">Formulas show up here when you open hint 3 on a question, or solve it.</p>`;  /* always first */
+  return `<div class="sheet" id="sheet">${note}${items.map(e=>`<div class="sheet-item"><span class="label">${e.topic} · ${e.name}</span>${EQ(e.eq)}<p class="small">${e.note||""}</p></div>`).join("")}</div>`;
 }
 /* Light / dark switch. With no choice saved, the page follows the device setting. */
 const THEME_KEY="hl-theme";

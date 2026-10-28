@@ -457,3 +457,6 @@ input,button,select,textarea{box-sizing:border-box}
 .rung.is-open:not(.is-folded) .rung-chev{transform:rotate(180deg)}
 .rung-toggle:hover .rung-chev{border-color:var(--blue)}
 .rung.is-folded .rung-n{background:var(--card);color:var(--blue);border:2px solid var(--blue)}
+
+/* The formula sheet's note on how formulas get added: always first */
+.sheet-note{font-size:.9rem;color:var(--ink);background:var(--blue-soft);border-radius:4px;padding:8px 12px}
