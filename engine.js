@@ -188,7 +188,7 @@ function resolve(){QS=SLOTS.map(sl=>sl.pool?viewOf(sl):sl);}
 const setLabel=n=>((CFG.sets||[]).find(x=>x.n===n)||{}).label||`Set ${n}`;
 const allDefs=()=>SLOTS.flatMap(sl=>sl.pool?sl.pool.map(d=>Object.assign({},d,{id:sl.id+"/"+(d.level||"v")})):[sl]);
 const val=(x,p)=>typeof x==="function"?x(p):x;
-function freshQ(q,params){return {params:params||Object.assign({},q.base),hints:0,armed:false,gv:{},gcheck:{},gmsg:{},grevealed:false,inputs:{},solved:{},fb:{},term:null,usedSolution:false,roundDone:false,solvedWith:null,best:null,wins:0};}
+function freshQ(q,params){return {params:params||Object.assign({},q.base),hints:0,folded:{},armed:false,gv:{},gcheck:{},gmsg:{},grevealed:false,inputs:{},solved:{},fb:{},term:null,usedSolution:false,roundDone:false,solvedWith:null,best:null,wins:0};}
 function save(){try{localStorage.setItem(STORE,JSON.stringify(state));}catch(e){}}
 const allSolved=q=>q.parts.every(pt=>state.qs[q.id].solved[pt.id]);
 
@@ -286,7 +286,8 @@ function rungBody(q,s,p,c,i){
 function rungHTML(q,s,p,c,i){
   const n=i+1,r=RUNGS[i];
   const head=`<span class="rung-n">${n}</span><span class="rung-t"><span class="rung-title">${r[0]}</span><span class="rung-sub">${r[1]}</span></span>`;
-  if(s.hints>=n) return `<li class="rung is-open" id="rung-${n}"><div class="rung-head">${head}</div><div class="rung-body">${rungBody(q,s,p,c,i)}</div></li>`;
+  if(s.hints>=n){const folded=!!(s.folded&&s.folded[n]);  /* an opened hint folds away (and back) when you tap its title */
+    return `<li class="rung is-open${folded?" is-folded":""}" id="rung-${n}"><button class="rung-head rung-toggle" data-act="fold" data-n="${n}" aria-expanded="${!folded}" aria-controls="rung-body-${n}">${head}<span class="rung-chev" aria-hidden="true">${CHEV}</span></button>${folded?"":`<div class="rung-body" id="rung-body-${n}">${rungBody(q,s,p,c,i)}</div>`}</li>`;}
   if(s.hints===i){
     if(n===5&&!allSolved(q)){
       if(!s.armed) return `<li class="rung" id="rung-${n}"><button class="rung-head rung-btn" data-act="arm">${head}<span class="rung-cta">Show solution</span></button></li>`;
@@ -519,7 +520,8 @@ function onClick(e){
     case "term":s.term=s.term===b.dataset.k?null:b.dataset.k;render();break;
     case "arm":s.armed=true;render();scrollToEl($("#rung-5"));break;
     case "disarm":s.armed=false;render();break;
-    case "hint":{const n=+b.dataset.n;if(n===s.hints+1){s.hints=n;s.armed=false;if(n===5&&!allSolved(q))s.usedSolution=true;}
+    case "fold":{const n=+b.dataset.n;s.folded=s.folded||{};s.folded[n]=!s.folded[n];render();const t=$(`#rung-${n} .rung-toggle`);if(t)t.focus({preventScroll:true});break;}
+    case "hint":{const n=+b.dataset.n;if(s.folded)delete s.folded[n];if(n===s.hints+1){s.hints=n;s.armed=false;if(n===5&&!allSolved(q))s.usedSolution=true;}
       render();scrollToEl($(`#rung-${n}`),"start");
       if(n===1){const first=$(".gv-in");if(first&&!s.grevealed)setTimeout(()=>first.focus({preventScroll:true}),reduceMotion?0:350);}break;}
     case "gcheck":{s.gmsg=s.gmsg||{};q.given(s.params).forEach(g=>{const xs=candidates(s.gv[g.k]||"");const ok=xs.some(x=>near(x,g.val,0.005));s.gcheck[g.k]=ok;s.gmsg[g.k]=null;

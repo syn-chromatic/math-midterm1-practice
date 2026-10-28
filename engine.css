@@ -448,3 +448,12 @@ input,button,select,textarea{box-sizing:border-box}
   .qpick-btn{display:none}
   .qpick .qlist,.qpick.open .qlist{display:flex;position:static;padding:0;border:0;background:none;box-shadow:none;max-height:none;overflow:visible;animation:none}
 }
+
+/* An opened hint folds away when you tap its title, and opens again on the next tap */
+.rung-toggle{cursor:pointer;border-radius:6px}
+.rung-toggle:hover .rung-title{color:var(--blue)}
+.rung-chev{margin-left:auto;flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:var(--blue);border:1.5px solid var(--rule);background:var(--card);transition:transform .2s ease,border-color .2s}
+.rung-chev svg{fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.rung.is-open:not(.is-folded) .rung-chev{transform:rotate(180deg)}
+.rung-toggle:hover .rung-chev{border-color:var(--blue)}
+.rung.is-folded .rung-n{background:var(--card);color:var(--blue);border:2px solid var(--blue)}
