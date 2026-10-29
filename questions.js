@@ -250,7 +250,8 @@ function traps2(p,c){const A=p.A,t1=A[2][0]*c.w31.d,t3=A[2][2]*c.w33.d;
     [A[1][0]*c.M21+A[1][1]*c.M22,"If you went along row 2: its signs are − + − +, so its first term is subtracted."]
   ],c.det);}
 const T2={
-  id:"t2",topic:"Determinant 4×4",
+  id:"t2",topic:"Determinant 4×4",level:"With zeros",
+  blurb:"Like the sample sheet: row 3 has two zeros, so only two 3×3 determinants are needed.",
   base:{A:[[0,-1,3,-2],[1,2,0,0],[1,0,1,0],[2,-2,-1,1]],opts:[10,-11,12,-13,14]},
   random:()=>{const v=()=>pick([-2,-1,1,2,3]);for(;;){const A=[[0,v(),v(),v()],[v(),v(),0,0],[v(),0,v(),0],[v(),v(),v(),v()]],d=det(A);
     if(d!==0&&Math.abs(d)<=60){const p={A},c=calc2(p);p.opts=makeOpts(c.det,pmCands(c.det,traps2(p,c)));return p;}}},
@@ -295,6 +296,77 @@ const T2={
     {html:`${MX(A,{cls:cross(2,2)})}<span>→</span>${DT(c.m33)}<span>= ${nm(c.w33.d)}</span>`,note:`Cover row 3 and column 3. The 3×3 determinant left over is ${nm(c.w33.d)}. Sign +, times ${pn(A[2][2])}: ${nm(A[2][2]*c.w33.d)}.`},
     {html:`${MX(A,{cls:(i,j)=>i===2&&(j===0||j===2)?"hl":i===2?"x":""})}<span>= ${sumS([A[2][0]*c.w31.d,A[2][2]*c.w33.d])} = ${nm(c.det)}</span>`,note:`Add the two terms (the zeros give nothing): det A = <b>${nm(c.det)}</b>.`}
   ];})
+};
+
+/* ======================================================================
+   Task 2, full version: a 4×4 matrix with no zeros, so no shortcut.
+   Expand along row 1: four 3×3 determinants, each done along its own row 1.
+   ====================================================================== */
+const S4=["+","−","+","−"];
+function calc2f(p){const A=p.A,mins=[0,1,2,3].map(j=>minor(A,0,j)),ws=mins.map(det3Lines),M=ws.map(w=>w.d);
+  const terms=M.map((v,j)=>sgn(0,j)*A[0][j]*v),R2=[0,1,2,3].map(j=>det(minor(A,1,j)));
+  return {det:sum(terms),mins,ws,M,terms,R2,chkT:R2.map((v,j)=>sgn(1,j)*A[1][j]*v)};}
+function traps2f(p,c){const A=p.A,t=c.terms;
+  const d3=(m,f2,sg)=>[0,1,2].reduce((s,j)=>s+(sg?sg[j]:sgn(0,j))*m[0][j]*f2(minor(m,0,j)),0);
+  const plus2=m=>m[0][0]*m[1][1]+m[0][1]*m[1][0];
+  return clean([
+    [sum(A[0].map((a,j)=>a*c.M[j])),"Check the signs in front of the four terms. Along row 1 they go + − + −, so terms 2 and 4 are subtracted."],
+    [t[0]+t[1]+t[2]-t[3],"The fourth term gets a minus sign. Row 1 of the checkerboard reads + − + −."],
+    [t[0]+t[1]+t[2],"Row 1 has four numbers, so you need four terms. Don't forget the one for column 4."],
+    [t[1]+t[2]+t[3],"Row 1 has four numbers, so you need four terms. Don't forget the one for column 1."],
+    [c.mins.reduce((s,m,j)=>s+sgn(0,j)*A[0][j]*d3(m,plus2),0),"Check your 2×2 determinants: (top-left × bottom-right) <b>minus</b> (top-right × bottom-left)."],
+    [c.mins.reduce((s,m,j)=>s+sgn(0,j)*A[0][j]*d3(m,det2,[1,1,1]),0),"Inside each 3×3 determinant the signs also go + − +. The middle term there is subtracted too."]
+  ],c.det);}
+const symMinor4=j=>symM("a",4).slice(1).map(row=>row.filter((_,k)=>k!==j));
+const DET4_EQ=`${DET(A_)}${OP("=")}${en("a",1,1)}${Mn(1,1)}${OP("−")}${en("a",1,2)}${Mn(1,2)}${OP("+")}${en("a",1,3)}${Mn(1,3)}${OP("−")}${en("a",1,4)}${Mn(1,4)}`;
+const T2F={
+  id:"t2f",topic:"Determinant 4×4",level:"Full expansion",
+  blurb:"No zeros, so no shortcut: expand along row 1 and work out all four 3×3 determinants (twelve 2×2s in total).",
+  base:{A:[[2,-1,3,1],[1,2,-2,3],[-1,3,1,2],[3,1,2,-1]],opts:[150,-20,-150,-80,-145]},
+  random:()=>{const v=()=>pick([-3,-2,-1,1,2,3]);for(;;){const A=[0,1,2,3].map(()=>[0,1,2,3].map(v)),d=det(A);
+    if(d!==0&&Math.abs(d)<=150){const p={A},c=calc2f(p);p.opts=makeOpts(c.det,pmCands(c.det,traps2f(p,c)));return p;}}},
+  calc:calc2f,
+  text:(p,G,T)=>`Find the ${T("det","determinant")} of the 4×4 ${T("mx","matrix")}<span class="dmath">${A_} = ${MX(p.A,{cell:markCells([[1,1],[1,2],[1,3],[1,4]],G,"a")})}</span>`,
+  after:(p,c,done)=>OPTS(p,c.det,done),
+  terms:{det:TERMS.det,mx:TERMS.mx},
+  given:p=>[1,2,3,4].map(j=>gEntry(p.A,1,j,{why:`Number ${j} in row 1, the row you expand along.`})),
+  find:[{sym:DET(A_),name:"the determinant of A",unit:"",why:"One number. That's the answer."}],
+  parts:[Object.assign({id:"det",label:"Determinant of A",sym:DET(A_),unit:"",ans:(p,c)=>c.det,traps:traps2f},EXACT)],
+  idea:()=>`<p>This matrix has no zeros, so there's no row that saves work. Do the full expansion along <b>row 1</b>:</p>
+    <ol class="plain"><li>For each of the four numbers in row 1, cover its row and its column. What's left is a 3×3 determinant.</li>
+    <li>Work out each 3×3 determinant exactly like task 1: along its own first row, with + − +.</li>
+    <li>Multiply each one by the number you covered, and combine the four results with the signs <b>+ − + −</b> (row 1 of the checkerboard).</li></ol>
+    ${signGrid(4,0)}
+    <p>That's 4 three-by-three determinants, and 12 two-by-two determinants inside them. Write each one on its own line so no sign gets lost.</p>
+    <p class="small">Try it now. The next hint gives you the formula.</p>`,
+  formula:()=>EQ(DET4_EQ)+EQ(DET3_EQ)+EQ(DET2_EQ)+
+    legend([[Mn(1,mi("j")),"the 3×3 determinant left after you cover row 1 and column j",""],["+ − + −","the checkerboard signs along row 1",""]],
+      "Each 3×3 is split the same way into three 2×2 determinants with + − +."),
+  plug:(p,c)=>{const A=p.A,D=j=>DT(c.mins[j],{s:1});
+    return EQ(`${DET(A_)}${OP("=")}${pn(A[0][0])}${OP("·")}${D(0)}${OP("−")}${pn(A[0][1])}${OP("·")}${D(1)}`)+
+      EQ(`${OP("+")}${pn(A[0][2])}${OP("·")}${D(2)}${OP("−")}${pn(A[0][3])}${OP("·")}${D(3)}`)+
+      `<p>Now each 3×3 along its first row. For example the first one: ${DT(c.mins[0],{s:1})} = ${c.ws[0].l1}</p>`+
+      watch("Two layers of signs: + − + − for the four big terms, and + − + inside every 3×3. Put brackets around negative numbers so a minus sign never disappears.");},
+  solution:(p,c)=>{const A=p.A;
+    return steps([
+      ["Expand along row 1",`Row 1 is (${A[0].map(nm).join(", ")}). There are no zeros, so all four terms are needed. The checkerboard signs along row 1 are + − + −.`]
+    ].concat([0,1,2,3].map(j=>[`Cover row 1 and column ${j+1} (sign ${S4[j]})`,
+      wk(MX(A,{s:1,cls:cross(0,j)}))+det3Work(Mn(1,j+1),c.mins[j])+CALC(`term ${j+1}: ${S4[j]} ${pn(A[0][j])} × ${pn(c.M[j])} = <b>${nm(c.terms[j])}</b>`)
+    ])).concat([
+      ["Put it together",CALC(`${DET(A_)} = ${pn(A[0][0])} × ${pn(c.M[0])} − ${pn(A[0][1])} × ${pn(c.M[1])} + ${pn(A[0][2])} × ${pn(c.M[2])} − ${pn(A[0][3])} × ${pn(c.M[3])}`)+
+        CALC(`= ${sumS(c.terms)} = <b>${nm(c.det)}</b>`)]
+    ]))+checkline(`Going along row 2 instead (signs − + − +), its four 3×3 determinants are ${c.R2.map(nm).join(", ")}: −${pn(A[1][0])} × ${pn(c.R2[0])} + ${pn(A[1][1])} × ${pn(c.R2[1])} − ${pn(A[1][2])} × ${pn(c.R2[2])} + ${pn(A[1][3])} × ${pn(c.R2[3])} = ${sumS(c.chkT)} = ${nm(sum(c.chkT))} ✓`)+
+    finalAns(`${DET(A_)} = ${nm(c.det)}`);},
+  sheet:[
+    {name:"4×4 full expansion",eq:DET4_EQ,note:"Along row 1 with + − + −. Each M is a 3×3 determinant, done like task 1."}
+  ],
+  takeEq:()=>DET4_EQ,
+  takeaway:"With no zeros, expand along row 1: four 3×3 determinants with signs + − + −, each one split into three 2×2s with + − +.",
+  link:(p,c)=>optLine(p,c.det),
+  viz:vizSteps("Step through the full expansion along row 1.",(p,c)=>{const A=p.A,S=[{html:`${MX(A,{cls:i=>i===0?"hb":""})}${signGrid(4,0).replace('class="dmath"','')}`,note:"No zeros anywhere, so every term counts. Row 1 of the checkerboard reads + − + −."}];let run=0;
+    [0,1,2,3].forEach(j=>{run+=c.terms[j];S.push({html:`${MX(A,{cls:cross(0,j)})}<span>→</span>${DT(c.mins[j])}<span>= ${nm(c.M[j])}</span>`,
+      note:`Cover row 1 and column ${j+1}. The 3×3 left over is ${c.ws[j].l3} = ${nm(c.M[j])}. Sign ${S4[j]}, times ${pn(A[0][j])}: ${nm(c.terms[j])}. Running total: <b>${nm(run)}</b>.`});});
+    return S;})
 };
 
 /* ======================================================================
@@ -728,8 +800,9 @@ const T8={
   ];})
 };
 
-const QUESTIONS=[T1,T2,T3,T4,T5,T6,T7,T8];
-window.__MATH_QS=QUESTIONS;  /* used by the self-check script */
+/* Task 2 has two versions the student picks between: the sample sheet's (with zeros) and a full expansion. */
+const QUESTIONS=[T1,{id:"t2",choose:"Version",pool:[T2,T2F]},T3,T4,T5,T6,T7,T8];
+window.__MATH_QS=[T1,T2,T2F,T3,T4,T5,T6,T7,T8];  /* used by the self-check script */
 HL.start({
   id:"math-midterm-1",
   title:"Math Midterm 1 Practice",

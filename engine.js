@@ -403,15 +403,19 @@ function setupViz(q){
   const p=state.qs[q.id].params;
   q.viz.setup(p,q.calc(p),{$:sel=>$(sel,root),$$:sel=>$$(sel,root),root,loop:makeLoop,reduceMotion,fmt});
 }
+/* A slot with choose:"label" lets the student pick its version instead of getting a random one. */
+function verHTML(sl,s){const w=s.which||0;
+  return `<div class="ver" role="group" aria-label="${esc(sl.choose)}"><span class="ver-l">${sl.choose}</span>${sl.pool.map((d,i)=>`<button class="btn" data-act="ver" data-w="${i}" aria-pressed="${i===w}">${d.level||`Version ${i+1}`}</button>`).join("")}${sl.pool[w].blurb?`<p class="small ver-note">${sl.pool[w].blurb}</p>`:""}</div>`;}
 function questionHTML(q){
   const s=state.qs[q.id],p=s.params,c=q.calc(p),gl=q.given(p);
   const G=(k,txt)=>{const g=gl.find(x=>x.k===k);return `<mark class="g${s.hints>=1?" on":""}" data-g="${k}">${s.grevealed&&g&&CFG.gsym!==false?`<span class="g-sym">${g.sym} =</span> `:""}${txt}</mark>`;};
   const T=(k,txt)=>`<button type="button" class="term${s.term===k?" is-on":""}" data-act="term" data-k="${k}" aria-expanded="${s.term===k}">${txt}</button>`;
   const def=s.term&&q.terms&&q.terms[s.term]?`<div class="termdef" role="note"><p><b>${q.terms[s.term][0]}.</b> ${q.terms[s.term][1]}</p><button class="btn btn-ghost" data-act="term" data-k="${s.term}">Close</button></div>`:"";
-  const idx=QS.indexOf(q);
+  const idx=QS.indexOf(q),sl=SLOTS.find(x=>x.id===q.id),chooser=sl&&sl.pool&&sl.choose?verHTML(sl,s):"";
   return `<div style="display:flex;flex-direction:column;gap:22px">
     <article class="qcard" aria-labelledby="q-title">
-      <div class="q-meta"><span class="tk-label" id="q-title">Question ${idx+1} of ${QS.length}</span><span class="tag">${q.topic}</span>${q.level?`<span class="tag tag-set">${q.level}</span>`:""}${CFG.sets&&q.set?`<span class="tag tag-set">${setLabel(q.set)}</span>`:""}<span class="small">${q.hw||""}</span></div>
+      <div class="q-meta"><span class="tk-label" id="q-title">Question ${idx+1} of ${QS.length}</span><span class="tag">${q.topic}</span>${q.level&&!chooser?`<span class="tag tag-set">${q.level}</span>`:""}${CFG.sets&&q.set?`<span class="tag tag-set">${setLabel(q.set)}</span>`:""}<span class="small">${q.hw||""}</span></div>
+      ${chooser}
       <p class="qtext">${q.text(p,G,T)}</p>${q.after?q.after(p,c,allSolved(q)):""}
       ${sceneOf(q)?`<div class="scene" aria-hidden="true"><canvas id="scene-cv"></canvas></div>`:""}
       <p class="small" style="margin-top:-8px">Words with a dotted underline explain themselves when you click them.</p>
@@ -495,7 +499,7 @@ function checkPart(q,partId){
 }
 function renew(q){
   const s=state.qs[q.id],sl=SLOTS.find(x=>x.id===q.id);let def=q,w;
-  if(sl&&sl.pool){w=Math.floor(Math.random()*sl.pool.length);def=sl.pool[w];}
+  if(sl&&sl.pool){w=sl.choose?(s.which||0):Math.floor(Math.random()*sl.pool.length);def=sl.pool[w];}
   let np,tries=0;
   do{np=def.random();tries++;}while((w===undefined||w===(s.which||0))&&JSON.stringify(np)===JSON.stringify(s.params)&&tries<20);
   const f=freshQ(def,np);f.best=s.best;f.wins=s.wins;if(w!==undefined)f.which=w;state.qs[q.id]=f;resolve();
@@ -530,6 +534,8 @@ function onClick(e){
     case "greveal":s.grevealed=true;render();break;
     case "check":checkPart(q,b.dataset.part);break;
     case "renew":renew(q);render();scrollToEl($("#main"),"start");break;
+    case "ver":{const w=+b.dataset.w,sl=SLOTS.find(x=>x.id===q.id);if(!sl||!sl.pool||w===(s.which||0))break;
+      const def=sl.pool[w],f=freshQ(def,def.random());f.best=s.best;f.wins=s.wins;f.which=w;state.qs[q.id]=f;render();break;}
     case "renewall":state.allArm=false;renewAll();state.cur=0;render();scrollToEl($("#main"),"start");break;
   }
 }
@@ -598,7 +604,7 @@ function start(cfg){
   if(!state)state={cur:0,sheetOpen:false,qs:{}};
   SLOTS.forEach(sl=>{const s=state.qs[sl.id];
     if(s&&s.params&&(!sl.pool||((s.which||0)<sl.pool.length)))return;
-    if(sl.pool){const w=Math.floor(Math.random()*sl.pool.length),f=freshQ(sl.pool[w]);f.which=w;state.qs[sl.id]=f;}
+    if(sl.pool){const w=sl.choose?0:Math.floor(Math.random()*sl.pool.length),f=freshQ(sl.pool[w]);f.which=w;state.qs[sl.id]=f;}
     else state.qs[sl.id]=freshQ(sl);});
   resolve();
   if(!(state.cur>=0&&state.cur<=QS.length))state.cur=0;

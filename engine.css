@@ -116,6 +116,11 @@ b{font-weight:700}
 .qcard{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:22px clamp(16px,4vw,26px);display:flex;flex-direction:column;gap:18px;box-shadow:0 2px 0 var(--rule)}
 .q-meta{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline}
 .tag{font-family:var(--font-label);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--blue);border:1px solid var(--blue);padding:.15em .5em;border-radius:3px}
+.ver{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ver-l{font-family:var(--font-label);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--ink-2);margin-right:2px}
+.ver .btn{font-size:.85rem;padding:.4em .85em}
+.ver .btn[aria-pressed="true"]{background:var(--blue);color:var(--blue-ink)}
+.ver-note{flex-basis:100%;margin:0}
 .qtext{font-size:1.16rem;line-height:1.7;max-width:62ch}
 mark.g{background:transparent;color:inherit;padding:0 .08em;border-radius:2px;transition:background .2s}
 mark.g.on{background:linear-gradient(transparent 38%,var(--marker-soft) 38%)}
